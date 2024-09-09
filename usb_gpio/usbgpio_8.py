@@ -22,7 +22,7 @@ def send_command(ser_port, command):
     return response
  
 def main():
-    port_name = "COM6"  # Replace with your actual COM port
+    port_name = "COM1"  # Replace with your actual COM port
     baud_rate = 19200
     timeout = 1
  
@@ -32,7 +32,7 @@ def main():
             adc_channel = 0  
             adc_command = f"adc read {adc_channel}\r"
             adc_response = send_command(ser_port, adc_command)
-            adc_value = adc_response[13:-3]
+            adc_value = adc_response[12:-3]
             print(f"ADC Read {adc_channel} is: {adc_value}")
 
             # GPIO number

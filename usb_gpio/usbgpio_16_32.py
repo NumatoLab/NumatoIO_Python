@@ -29,10 +29,10 @@ def main():
     try:
         with serial.Serial(port_name, baud_rate, timeout=timeout) as ser_port:
             # Example 1: Read from ADC channel 0
-            adc_channel = 0  
+            adc_channel = 1  
             adc_command = f"adc read {adc_channel}\r"
             adc_response = send_command(ser_port, adc_command)
-            adc_value = adc_response[13:-3]
+            adc_value = adc_response[12:-3]
             print(f"ADC Read {adc_channel} is: {adc_value}")
 
             # GPIO number

@@ -24,7 +24,7 @@ def send_command(ser_port, command):
     return response
  
 def main():
-    port_name = "COM51"  # Replace with your actual COM port
+    port_name = "COM1"  # Replace with your actual COM port
     baud_rate = 19200
     timeout = 1
  
@@ -48,7 +48,7 @@ def main():
 
             try:
                 # GPIO number
-                gpio_number = a
+                gpio_number = 5
 
                 if isinstance(gpio_number, int) and 0 <= gpio_number <= 7:
                     gpio_number = str(gpio_number).zfill(3)

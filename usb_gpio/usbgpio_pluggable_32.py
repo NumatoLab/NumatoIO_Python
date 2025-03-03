@@ -30,54 +30,55 @@ def main():
  
     try:
         with serial.Serial(port_name, baud_rate, timeout=timeout) as ser_port:
-            try: 
+            try:
                 # ADC channel
                 adc_channel = 0
-                
-                if isinstance(adc_channel, int) and 0 <= adc_channel <= 5:
-                
+
+                if isinstance(adc_channel, int) and 0 <= adc_channel <= 6:
                     # Example 1: Read from ADC channel 0
+                    adc_channel = str(adc_channel).zfill(3)
                     adc_command = f"adc read {adc_channel}\r"
                     adc_response = send_command(ser_port, adc_command)
-                    adc_value = adc_response[12:-3]
+                    adc_value = adc_response[13:-3]
                     print(f"ADC Read {adc_channel} is: {adc_value}")
-                    
                 else:
-                    print(f"Error: adc_channel must be one of the digits between 0 and 5.")
+                    print(f"Error: adc_channel must be one of the digits between 0 and 6.")
             except Exception as e:
-                print(f"Error: adc_channel must be one of the digits between 0 and 5.")
-                
+                print(f"Error: adc_channel must be one of the digits between 0 and 6.")
+
             try:
                 # GPIO number
                 gpio_number = 5
 
-                if isinstance(gpio_number, int) and 0 <= gpio_number <= 7:
+                if isinstance(gpio_number, int) and 0 <= gpio_number <= 31:
+                    gpio_number = str(gpio_number).zfill(3)
+                    
                     # Example 2: Set GPIO pin 5
                     gpio_set_command = f"gpio set {gpio_number}\r"
                     send_command(ser_port, gpio_set_command)
                     print(f"GPIO {gpio_number} set successfully.")
-             
+         
                     # Example 3: Read GPIO pin 5
                     gpio_read_command = f"gpio read {gpio_number}\r"
                     gpio_response = send_command(ser_port, gpio_read_command)
                     gpio_state = gpio_response[-4:-3]
                     print(f"GPIO {gpio_number} state is: {gpio_state}")
-                        
+                    
                     # Example 4: Clear GPIO pin 5
                     gpio_clear_command = f"gpio clear {gpio_number}\r"
                     send_command(ser_port, gpio_clear_command)
                     print(f"GPIO {gpio_number} cleared successfully.")
-                        
+                    
                     # Example 5: Read GPIO pin 5
                     gpio_read_command = f"gpio read {gpio_number}\r"
                     gpio_response = send_command(ser_port, gpio_read_command)
                     gpio_state = gpio_response[-4:-3]
                     print(f"GPIO {gpio_number} state is: {gpio_state}")
                 else:
-                    print(f"Error: GPIO number must be one of the digits between 0 and 7.")
+                    print(f"Error: GPIO number must be one of the digits between 0 and 31.")
             except Exception as e:
-                print(f"Error: GPIO number must be one of the digits between 0 and 7.")
-        
+                print(f"Error: GPIO number must be one of the digits between 0 and 31.") 
+            
     except serial.SerialException as e:
         print(f"Error opening or communicating with serial port: {e}")
     except Exception as e:

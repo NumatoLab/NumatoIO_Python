@@ -1,5 +1,5 @@
 # ============================================================================
-# Numato Lab LEO Web series Net0 REST API Example
+# Numato Lab LEO Web series Sample Script
 #
 # Copyright (c) 2026 Numato Lab
 #
@@ -22,38 +22,33 @@
 # THE SOFTWARE.
 #
 # Description:
-#   Demonstrates reading and updating network configuration using the
-#   Numato Lab REST API.
-#
-#   WARNING:
-#   Changing the network configuration can disconnect the device.
+#   Demonstrates Net0 RESTAPI Network management.
 #
 # ============================================================================
-
 import json
 import requests
 
 
 # ============================================================
-# Configuration
+# Current Configuration
 # ============================================================
 
-DEVICE_IP = "10.10.10.82"  # your device IP
-USERNAME = "admin"
-PASSWORD = "admin1234"
+DEVICE_IP = "10.10.10.204"  # your device IP
+CURRENT_USERNAME = "admin"          # your device Username
+CURRENT_PASSWORD = "admin1234"      # your device Password
 
 
 # ============================================================
 # Network configuration to apply
 # ============================================================
 
-NEW_HOSTNAME = "Leo-Wr8"
+NEW_HOSTNAME = "Leo-Wr8-net0" # New Hostname you want to update
 
-DHCP_ENABLED = 1
+NEW_DHCP_STATUS = 0              # DHCP status you want
 
-STATIC_IP = "10.10.10.82"
-SUBNET_MASK = "255.255.255.0"
-GATEWAY = "10.10.10.1"
+NEW_STATIC_IP = "10.10.10.77"     # New Static IP you want to update
+NEW_SUBNET_MASK = "255.255.255.0" # New Subnet Mask you want to update
+NEW_GATEWAY = "10.10.10.1"        # New Gateway you want to update
 
 
 # ============================================================
@@ -63,7 +58,7 @@ GATEWAY = "10.10.10.1"
 BASE_URL = f"http://{DEVICE_IP}"
 
 LOGIN_URL = f"{BASE_URL}/auth.cgi"
-NETWORK_URL = f"{BASE_URL}/api/v0/network/0/settings"
+NETWORK_SETTINGS_URL = f"{BASE_URL}/api/v0/network/0/settings"
 
 
 # ============================================================
@@ -93,16 +88,13 @@ def login(session):
     response = session.post(
         LOGIN_URL,
         data={
-            "user": USERNAME,
-            "pass": PASSWORD,
+            "user": CURRENT_USERNAME,
+            "pass": CURRENT_PASSWORD,
         },
         timeout=5,
         allow_redirects=False,
         stream=True,
     )
-
-    print("HTTP status:", response.status_code)
-
     sid = session.cookies.get("SID")
 
     response.close()
@@ -112,7 +104,7 @@ def login(session):
             "Login failed: SID cookie was not received."
         )
 
-    print("Authentication successful.")
+    print("Logged in successfully.")
     print()
 
 
@@ -120,13 +112,13 @@ def get_network_settings(session):
     """Get the current network configuration."""
 
     response = session.get(
-        NETWORK_URL,
+        NETWORK_SETTINGS_URL,
         timeout=5,
     )
 
     response.raise_for_status()
 
-    print("=== NETWORK SETTINGS ===")
+    print("=== CURRENT NETWORK SETTINGS ===")
     print_json(response)
     print()
 
@@ -151,17 +143,17 @@ def update_network_settings(
         "gateway": gateway,
     }
 
-    print("=== UPDATE NETWORK SETTINGS ===")
+    print("=== UPDATING THE NETWORK SETTINGS ===")
     print(
         json.dumps(
             payload,
-            indent=4
+            indent=5
         )
     )
     print()
 
     response = session.post(
-        NETWORK_URL,
+        NETWORK_SETTINGS_URL,
         json=payload,
         timeout=5,
     )
@@ -178,8 +170,8 @@ def update_network_settings(
 
 def main():
 
-    print("Numato PIC REST API - Network Settings Example")
-    print("----------------------------------------------")
+    print("Numato Lab Net0 REST API - Network Settings Sample")
+    print("---------------------------------------------------")
     print(f"Device: {DEVICE_IP}")
     print()
 
@@ -209,10 +201,10 @@ def main():
         update_network_settings(
             session,
             hostname=NEW_HOSTNAME,
-            dhcp=DHCP_ENABLED,
-            ip=STATIC_IP,
-            subnet=SUBNET_MASK,
-            gateway=GATEWAY,
+            dhcp=NEW_DHCP_STATUS,
+            ip=NEW_STATIC_IP,
+            subnet=NEW_SUBNET_MASK,
+            gateway=NEW_GATEWAY,
         )
 
         print(
@@ -226,14 +218,14 @@ def main():
     except requests.RequestException as exc:
 
         print()
-        print("HTTP communication error:")
-        print(exc)
+        print("Invalid BASE_URL")
+        #print(exc)
 
     except Exception as exc:
 
         print()
-        print("Operation failed:")
-        print(exc)
+        print("Operation failed")
+        #print(exc)
 
 
 if __name__ == "__main__":

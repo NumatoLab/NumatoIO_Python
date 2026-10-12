@@ -1,5 +1,5 @@
 # ============================================================================
-# Numato Lab LEO Web series Net0 REST API Example
+# Numato Lab LEO Web series Sample Script
 #
 # Copyright (c) 2026 Numato Lab
 #
@@ -22,25 +22,23 @@
 # THE SOFTWARE.
 #
 # Description:
-#   Demonstrates authentication, relay control, and device status using the
-#   Numato Lab REST API.
+#   Demonstrates Net0 RESTAPI Relay management.
 #
 # ============================================================================
-
 import json
 import requests
 import time
 
 
 # ============================================================
-# Configuration
+# Current Configuration
 # ============================================================
 
-DEVICE_IP = "10.10.10.204" # your device IP
-USERNAME = "admin"
-PASSWORD = "admin1234"
+DEVICE_IP = "10.10.10.111"     # your device IP
+CURRENT_USERNAME = "admin"     # your device Username
+CURRENT_PASSWORD = "admin1234" # your device Password
 
-RELAY_NUMBER = 3
+RELAY_NUMBER = 3  # relay number which you want to control
 
 
 # ============================================================
@@ -50,7 +48,7 @@ RELAY_NUMBER = 3
 BASE_URL = f"http://{DEVICE_IP}"
 
 LOGIN_URL = f"{BASE_URL}/auth.cgi"
-RELAY_URL = f"{BASE_URL}/api/v0/relay/control"
+RELAY_CONTROL_URL = f"{BASE_URL}/api/v0/relay/control"
 STATUS_URL = f"{BASE_URL}/api/v0/status"
 
 
@@ -81,15 +79,14 @@ def login(session):
     response = session.post(
         LOGIN_URL,
         data={
-            "user": USERNAME,
-            "pass": PASSWORD,
+            "user": CURRENT_USERNAME,
+            "pass": CURRENT_PASSWORD,
         },
         timeout=5,
         allow_redirects=False,
         stream=True,
     )
 
-    print("HTTP status:", response.status_code)
 
     sid = session.cookies.get("SID")
 
@@ -100,25 +97,10 @@ def login(session):
             "Login failed: SID cookie was not received."
         )
 
-    print("Authentication successful.")
+    print("Logged in successfully.")
     print()
 
 
-def get_relay_status(session):
-    """Get status of all relays."""
-
-    response = session.get(
-        RELAY_URL,
-        timeout=5,
-    )
-
-    response.raise_for_status()
-
-    print("=== RELAY STATUS ===")
-    print_json(response)
-    print()
-
-    return response.json()
 
 
 def get_device_status(session):
@@ -172,7 +154,7 @@ def set_relay(session, relay_number, state):
     )
 
     response = session.post(
-        RELAY_URL,
+        RELAY_CONTROL_URL,
         json={
             "relay_num": relay_number,
             "relay_state": state,
@@ -192,8 +174,8 @@ def set_relay(session, relay_number, state):
 
 def main():
 
-    print("Numato PIC REST API - Relay & Status Example")
-    print("---------------------------------------------")
+    print("Numato Lab Net0 REST API - Relay Control & Status Sample")
+    print("---------------------------------------------------------")
     print(f"Device: {DEVICE_IP}")
     print()
 
@@ -205,11 +187,6 @@ def main():
         # Login
         # ----------------------------------------------------
         login(session)
-
-        # ----------------------------------------------------
-        # Get relay status
-        # ----------------------------------------------------
-        get_relay_status(session)
 
         # ----------------------------------------------------
         # Get complete device status
@@ -281,20 +258,21 @@ def main():
 
             print("Relay OFF verified.")
             print()
+            break
 
         print("=== TEST PASSED ===")
 
     except requests.RequestException as exc:
 
         print()
-        print("HTTP communication error:")
-        print(exc)
+        print("Invalid BASE_URL.")
+        #print(exc)
 
     except Exception as exc:
 
         print()
-        print("Test failed:")
-        print(exc)
+        print("Operation failed.")
+        #print(exc)
 
 
 if __name__ == "__main__":

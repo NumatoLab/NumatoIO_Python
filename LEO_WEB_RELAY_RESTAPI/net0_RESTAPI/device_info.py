@@ -1,5 +1,5 @@
 # ============================================================================
-# Numato Lab LEO Web series Net0 REST API Example
+# Numato Lab LEO Web series Sample Script
 #
 # Copyright (c) 2026 Numato Lab
 #
@@ -22,24 +22,22 @@
 # THE SOFTWARE.
 #
 # Description:
-#   Demonstrates user account management using the Numato Lab REST API.
+#   Demonstrates Net0 RESTAPI Device management.
 #
 # ============================================================================
-
 import json
 import requests
 
 
 # ============================================================
-# Configuration
+# Current Configuration
 # ============================================================
 
 DEVICE_IP = "10.10.10.204"  # your device IP
-USERNAME = "admin"
-PASSWORD = "Admin1234"
+CURRENT_USERNAME = "admin"          # your device Username
+CURRENT_PASSWORD = "admin1234"      # your device Password
 
-NEW_USERNAME = "admin"
-NEW_PASSWORD = "admin1234"
+NEW_DEVICE_ID = "00000007"  # your New Device ID
 
 
 # ============================================================
@@ -49,7 +47,7 @@ NEW_PASSWORD = "admin1234"
 BASE_URL = f"http://{DEVICE_IP}"
 
 LOGIN_URL = f"{BASE_URL}/auth.cgi"
-USER_URL = f"{BASE_URL}/api/v0/useraccount"
+DEVICEINFO_URL = f"{BASE_URL}/api/v0/deviceinfo"
 
 
 # ============================================================
@@ -79,15 +77,15 @@ def login(session):
     response = session.post(
         LOGIN_URL,
         data={
-            "user": USERNAME,
-            "pass": PASSWORD,
+            "user": CURRENT_USERNAME,
+            "pass": CURRENT_PASSWORD,
         },
         timeout=5,
         allow_redirects=False,
         stream=True,
     )
 
-    print("HTTP status:", response.status_code)
+
 
     sid = session.cookies.get("SID")
 
@@ -98,53 +96,43 @@ def login(session):
             "Login failed: SID cookie was not received."
         )
 
-    print("Authentication successful.")
+    print("Logged in successfully.")
     print()
 
 
-def get_user_account(session):
-    """Get the configured username."""
+def get_device_info(session):
+    """Get device ID, serial number, and firmware version."""
 
     response = session.get(
-        USER_URL,
+        DEVICEINFO_URL,
         timeout=5,
     )
 
     response.raise_for_status()
 
-    print("=== USER ACCOUNT ===")
+    print("=== DEVICE INFORMATION ===")
     print_json(response)
     print()
 
     return response.json()
 
 
-def update_user_account(
-    session,
-    username,
-    password,
-):
-    """Update username and password."""
+def set_device_id(session, device_id):
+    """Update the device ID."""
 
-    if not 1 <= len(username) <= 8:
+    if len(device_id) != 8:
         raise ValueError(
-            "Username must contain 1 to 8 characters."
-        )
-
-    if not 9 <= len(password) <= 31:
-        raise ValueError(
-            "Password must contain 9 to 31 characters."
+            "Device ID must contain exactly 8 characters."
         )
 
     print(
-        f"=== UPDATE USER ACCOUNT -> {username} ==="
+        f"=== SET DEVICE ID -> {device_id} ==="
     )
 
     response = session.post(
-        USER_URL,
+        DEVICEINFO_URL,
         json={
-            "username": username,
-            "password": password,
+            "device_id": device_id,
         },
         timeout=5,
     )
@@ -161,8 +149,8 @@ def update_user_account(
 
 def main():
 
-    print("Numato PIC REST API - User Account Example")
-    print("------------------------------------------")
+    print("Numato Lab Net0 REST API - Device Information Sample")
+    print("-----------------------------------------------------")
     print(f"Device: {DEVICE_IP}")
     print()
 
@@ -176,39 +164,40 @@ def main():
         login(session)
 
         # ----------------------------------------------------
-        # Read current username
+        # Read device information
         # ----------------------------------------------------
-        get_user_account(session)
+        get_device_info(session)
+
+# ====================================================================================================
+# UnComment the below set_device_id function and get_device_info if you want to update your device ID
+# ====================================================================================================
+        # ----------------------------------------------------
+        # Update device ID
+        # ----------------------------------------------------
+        #set_device_id(
+        #   session,
+        # NEW_DEVICE_ID
+        #)
 
         # ----------------------------------------------------
-        # Update credentials
+        # Read device information again
         # ----------------------------------------------------
-        update_user_account(
-            session,
-            NEW_USERNAME,
-            NEW_PASSWORD
-        )
+        #print("Verifying device ID...")
+        #get_device_info(session)
 
-        print(
-            "User account updated successfully."
-        )
-
-        print(
-            "Create a new session and log in again using "
-            "the new credentials to verify the change."
-        )
+        #print("=== TEST PASSED ===")
 
     except requests.RequestException as exc:
 
         print()
-        print("HTTP communication error:")
-        print(exc)
+        print("Invalid BASE_URL")
+        #print(exc)
 
     except Exception as exc:
 
         print()
-        print("Operation failed:")
-        print(exc)
+        print("Operation failed.")
+        #print(exc)
 
 
 if __name__ == "__main__":

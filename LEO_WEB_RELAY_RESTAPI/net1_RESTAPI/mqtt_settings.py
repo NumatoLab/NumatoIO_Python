@@ -1,5 +1,5 @@
 # ============================================================================
-# Numato Lab LEO Web series Net0 REST API Example
+# Numato Lab LEO Web series Sample Script
 #
 # Copyright (c) 2026 Numato Lab
 #
@@ -22,28 +22,28 @@
 # THE SOFTWARE.
 #
 # Description:
-#   Demonstrates reading and updating MQTT configuration using the
-#   Numato Lab REST API.
+#   Demonstrates Net1 RESTAPI MQTT management.
+#
 # ============================================================================
-
 import requests
+import json
 
+# ============================================================
+# Current Configuration
+# ============================================================
 
-# Device and login details
-device_ip = "10.10.10.203"
+device_ip = "10.10.10.203"   # your device IP
+
+current_username = "admin"           # your device Username
+current_password_web = "admin1234"   # your device Password
+
+# ============================================================
+# API URLs
+# ============================================================
 
 login_url = "http://" + device_ip + "/login"
 
-username = "admin"
-password_web = "admin1234"
-
-
-# API
-api_mqtt_settings_url = (
-    "http://" +
-    device_ip +
-    "/api/v0/mqtt/0/settings"
-)
+api_mqtt_settings_url = ( "http://" + device_ip + "/api/v0/mqtt/0/settings" )
 
 
 def maestro_mfg_login_to_web_console(
@@ -53,8 +53,8 @@ def maestro_mfg_login_to_web_console(
         password):
 
     form_data = {
-        "user": username,
-        "pass": password
+        "user": current_username,
+        "pass": current_password_web
     }
 
     headers = {
@@ -70,22 +70,20 @@ def maestro_mfg_login_to_web_console(
         data=form_data,
         headers=headers
     )
-
-    if response.status_code == 200:
+    
+    if response.status_code == 200 and response.url.endswith("/index.html"):
         print("Logged in successfully!")
         return True
 
-    print("Login failed")
+    print("Login failed ")
     return False
 
 
 def get_mqtt_settings(session):
 
-    print("\n========== MQTT SETTINGS ==========")
+    print("\n========== CURRENT MQTT SETTINGS ==========")
 
     response = session.get(api_mqtt_settings_url)
-
-    print("Status code:", response.status_code)
 
     if response.status_code != 200:
 
@@ -94,16 +92,7 @@ def get_mqtt_settings(session):
 
         return None
 
-    try:
-
-        data = response.json()
-
-    except ValueError:
-
-        print("Invalid JSON response")
-        print(response.text)
-
-        return None
+    data = response.json()
 
     print("Broker URL       :", data.get("brokerurl"))
     print("Publish Interval :", data.get("pubinterval"))
@@ -139,9 +128,12 @@ def get_mqtt_settings(session):
     return data
 
 
+# =========================================================================
+# MQTT configuration to apply - Update with the settings of your choice.
+# =========================================================================
 def update_mqtt_settings(session):
 
-    print("\n========== UPDATE MQTT SETTINGS ==========")
+    print("\n========== UPDATING MQTT SETTINGS ==========")
 
     data = {
         "mqbrokerurl": "mqtt://test.mosquitto.org",
@@ -150,10 +142,10 @@ def update_mqtt_settings(session):
         "mquser": "mqtt_user",
         "mqpass": "mqtt_password",
 
-        "mqclientid": "LEOWR8A-03AC",
+        "mqclientid": "LEOWR8-Mqtt",
 
         "mqtopic": "numato/device",
-        "mqmsgfmt": "json",
+        "mqmsgfmt": "{Relay:~rl_val~,Digital Input:~din_val~}",
 
         "mqsubtopic": "numato/device/control"
     }
@@ -168,16 +160,14 @@ def update_mqtt_settings(session):
         headers=headers
     )
 
-    print("Status code:", response.status_code)
-
     if response.status_code == 200:
 
-        print("MQTT settings updated successfully!")
+        print(json.dumps(data, indent=4))
 
-        try:
-            print("Response:", response.json())
-        except ValueError:
-            print("Response:", response.text)
+        print("MQTT settings updated successfully!")
+        print(
+            "Reboot the device to save the updated MQTT settings."
+        )
 
         return True
 
@@ -186,25 +176,51 @@ def update_mqtt_settings(session):
 
     return False
 
-
+# ============================================================
+# Main
+# ============================================================
 def main():
+
+    print("Numato Lab Net1 REST API - MQTT Settings Sample")
+    print("------------------------------------------------")
+    print(f"Device: {device_ip}")
+    print()
 
     session = requests.Session()
 
-    if not maestro_mfg_login_to_web_console(
-        session,
-        login_url,
-        username,
-        password_web
-    ):
-        return
+    try:
+        
+        # ----------------------------------------------------
+        # Login
+        # ----------------------------------------------------
+        if not maestro_mfg_login_to_web_console(
+            session,
+            login_url,
+            current_username,
+            current_password_web
+        ):
+            return
+        
+        # ----------------------------------------------------
+        # Read current settings
+        # ----------------------------------------------------
+        get_mqtt_settings(session)
 
-    # GET
-    get_mqtt_settings(session)
+        # ----------------------------------------------------
+        # Update MQTT settings
+        # ----------------------------------------------------
+        update_mqtt_settings(session)
 
-    # POST - disabled by default
-    #
-    #update_mqtt_settings(session)
+    except requests.RequestException as exc:
+
+        #print()
+        print("Invalid Device IP or URL")
+        #print(exc)
+
+    except Exception as exc:
+
+        print("Operation failed.")
+        #print(exc)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # ============================================================================
-# Numato Lab LEO Web series Net0 REST API Example
+# Numato Lab LEO Web series Sample Script
 #
 # Copyright (c) 2026 Numato Lab
 #
@@ -22,27 +22,27 @@
 # THE SOFTWARE.
 #
 # Description:
-#   Demonstrates user account management using the Numato Lab REST API.
+#   Demonstrates Net1 RESTAPI User authentication management.
+#
 # ============================================================================
-
 import requests
 
+# ============================================================
+# Current Configuration
+# ============================================================
 
-# Device and login details
-device_ip = "10.10.10.203"
+device_ip = "10.10.10.203"          # your device IP
+
+current_username = "admin"          # your device Username
+current_password_web = "admin1234"  # your devie Password
+
+# ============================================================
+# API URLs
+# ============================================================
 
 login_url = "http://" + device_ip + "/login"
 
-username = "admin"
-password_web = "admin1234"
-
-
-# API
-api_user_url = (
-    "http://" +
-    device_ip +
-    "/api/v0/useraccount"
-)
+user_account_url = ("http://" + device_ip + "/api/v0/useraccount")
 
 
 def maestro_mfg_login_to_web_console(
@@ -52,8 +52,8 @@ def maestro_mfg_login_to_web_console(
         password):
 
     form_data = {
-        "user": username,
-        "pass": password
+        "user": current_username,
+        "pass": current_password_web
     }
 
     headers = {
@@ -70,11 +70,11 @@ def maestro_mfg_login_to_web_console(
         headers=headers
     )
 
-    if response.status_code == 200:
+    if response.status_code == 200 and response.url.endswith("/index.html"):
         print("Logged in successfully!")
         return True
 
-    print("Login failed")
+    print("Login failed ")
     return False
 
 
@@ -82,25 +82,20 @@ def get_user_account(session):
 
     print("\n========== USER ACCOUNT ==========")
 
-    response = session.get(api_user_url)
+    response = session.get(user_account_url)
 
-    print("Status code:", response.status_code)
 
     if response.status_code == 200:
 
-        try:
             data = response.json()
 
             print("Username:", data.get("user"))
             return data
 
-        except ValueError:
-            print("Invalid JSON response")
-            print(response.text)
 
     else:
         print("Failed to get user account")
-        print(response.text)
+        #print(response.text)
 
     return None
 
@@ -123,21 +118,19 @@ def update_user_account(
     }
 
     response = session.post(
-        api_user_url,
+        user_account_url,
         json=data,
         headers=headers
     )
 
-    print("Status code:", response.status_code)
-
     if response.status_code == 200:
 
         print("User account updated successfully!")
-
-        try:
-            print("Response:", response.json())
-        except ValueError:
-            print("Response:", response.text)
+        
+        print(
+           "Reboot the device and log in using "
+          "the new credentials to verify the change."
+         )
 
         return True
 
@@ -147,28 +140,59 @@ def update_user_account(
     return False
 
 
+# ============================================================
+# Main
+# ============================================================
+
 def main():
+
+    print("Numato Lab Net1 REST API - User Account Sample")
+    print("-----------------------------------------------")
+    print(f"Device: {device_ip}")
+    print()
 
     session = requests.Session()
 
-    if not maestro_mfg_login_to_web_console(
-        session,
-        login_url,
-        username,
-        password_web
-    ):
-        return
+    try:
 
-    # GET
-    get_user_account(session)
+        # ----------------------------------------------------
+        # Login
+        # ----------------------------------------------------
+        if not maestro_mfg_login_to_web_console(
+            session,
+            login_url,
+            current_username,
+            current_password_web
+        ):
+            return
 
-    # POST - keep disabled unless required
-    #
-    #update_user_account(
-    #     session,
-    #     "admin",
-    #     "admin1234"
-    #)
+        # ----------------------------------------------------
+        # Read current username
+        # ----------------------------------------------------
+        get_user_account(session)
+
+
+        # ========================================================================================
+        # UnComment the below update_user_account function with new username and password
+        # of your choice if you want to update your device credentials.
+        # ========================================================================================
+
+        
+        #update_user_account(
+        #   session,
+        #   "admin",
+        #   "admin1234" )
+    except requests.RequestException as exc:
+
+        #print()
+        print("Invalid Device IP.")
+        #print(exc)
+
+    except Exception as exc:
+
+        print()
+        print("Operation failed.")
+        #print(exc)
 
 
 if __name__ == "__main__":
